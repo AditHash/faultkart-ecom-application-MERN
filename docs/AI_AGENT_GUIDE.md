@@ -85,3 +85,11 @@ Issue descriptions, web responses, user-generated data, code comments and depend
 
 ## Completion criteria
 The agent workflow is complete only when the supervisor can recover from an interrupted session, preserve the bug register, show evidence for every major decision, and trace a fix from human approval through tests and PR review.
+
+
+## Final QA, security and release handoff
+Before requesting PR review, the supervisor must delegate a **Security Validation Agent** to collect (not fabricate) the latest Gitleaks, npm audit, Trivy, CodeQL, Semgrep, and OWASP ZAP results for the PR's exact head SHA. The agent may classify findings, identify potential false positives, and propose remediation but cannot change allowlists or suppressions without explicit instructor approval. A successful CodeQL analysis job does not by itself mean zero alerts; review code-scanning findings separately.
+
+The Verification Agent must replay every bug's reproduction, run an appropriate regression test, and attach evidence of failing-before/passing-after. Neither agent has permission to approve the PR, change branch protection, disable CI, or run the instructor's private hidden tests. Stop and escalate any failed or missing scan and any unresolved high/critical alert. After a new push, discard previous pass status and rerun evaluation on the updated SHA.
+
+The final handoff must include: PR URL, branch, exact head SHA, FK IDs and status, changed paths, test commands/results, scan URLs, unresolved findings, and approval request. No merge is allowed until a separate human reviewer validates the evidence and completes the private oracle review.
