@@ -15,7 +15,7 @@ npm run seed
 npm run dev
 ```
 
-Open `http://localhost:5173` (web) and `http://localhost:4000/api/health` (API). If you run MongoDB without Docker set `MONGODB_URI`. Use simulated products, orders, and users only. If dependencies or Docker are unavailable, report the blocker with the exact command and output.
+Open `http://localhost:5173` (web) and `http://localhost:4000/api/health` (API). Log in with any 10-digit mobile number starting 6-9 and the demo OTP `123456`. If products show out of stock after repeated test orders, run `npm run seed`. The README has the full setup, environment-variable and Docker instructions. If you run MongoDB without Docker set `MONGODB_URI`. Use simulated products, orders, and users only. If dependencies or Docker are unavailable, report the blocker with the exact command and output.
 
 ## What you must build
 - A Python-based LangChain/LangGraph orchestrator with at least **three meaningful specialized agents**: triage/reproduction, backend/source analysis, and test/verification. A fourth agent for frontend/browser testing is encouraged.
@@ -41,7 +41,7 @@ Open `http://localhost:5173` (web) and `http://localhost:4000/api/health` (API).
 - Logging, recovery, docs and demonstration — 15
 
 ## Rules for the intern
-Do not claim a finding without a reproducible test or a clear manual sequence. Do not ask an LLM to invent a bug inventory. Separate observations, hypotheses and verified facts. Create focused PRs and preserve deliberately unfixed bugs for later exercises. Do not run scans outside this local educational application.
+Do not claim a finding without a reproducible test or a clear manual sequence. Do not ask an LLM to invent a bug inventory. Separate observations, hypotheses and verified facts. Create focused PRs and preserve deliberately unfixed bugs for later exercises. The tracked issues are not the full list: the application also contains undisclosed functional and security defects, so test every module (account, orders, reviews, travel, seller, help, wishlist sharing, invoices) and triage scanner output. Do not run scans outside this local educational application.
 
 ## Submission
 Submit a link to your orchestrator code, architecture diagram, MCP inventory, bug register, at least three reproducible findings (or a documented limitation), regression tests, sample agent traces with secrets redacted, and a demo showing a human approval step.

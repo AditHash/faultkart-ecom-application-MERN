@@ -1,6 +1,6 @@
 # FaultKart bug register
 
-This register links **public customer/QA issue reports**, not verified fixes or hidden instructor answers. The target baseline for intern investigations is currently **`feature/marketplace-experience`** (draft [PR #7](https://github.com/AditHash/faultkart-ecom-application-MERN/pull/7)), not the older `main` UI. Use disposable demo data only.
+This register links **public customer/QA issue reports**, not verified fixes or hidden instructor answers. The target baseline for intern investigations is now **`main`** (commit `bc49b53` or later), which contains the full marketplace storefront merged through [PR #23](https://github.com/AditHash/faultkart-ecom-application-MERN/pull/23). The older draft [PR #7](https://github.com/AditHash/faultkart-ecom-application-MERN/pull/7) is superseded. Use disposable demo data only.
 
 **How to work:** Pick an open ticket; confirm the symptom in the browser or via API, record the exact SHA and reproducible evidence, add a regression test, request scoped approval, fix on your own feature branch, attach the PR, and run every required functional/security workflow. **Do not mark suspected concurrency issues reproduced until demonstrated.**
 
@@ -29,7 +29,11 @@ This register links **public customer/QA issue reports**, not verified fixes or 
 
 ## Separate design issue
 
-[FK-100 — Marketplace redesign (#6)](https://github.com/AditHash/faultkart-ecom-application-MERN/issues/6) is tracked through [draft PR #7](https://github.com/AditHash/faultkart-ecom-application-MERN/pull/7). It is a **design upgrade**, not a bug that an intern must automatically re-fix.
+[FK-100 — Marketplace redesign (#6)](https://github.com/AditHash/faultkart-ecom-application-MERN/issues/6) was delivered in [PR #23](https://github.com/AditHash/faultkart-ecom-application-MERN/pull/23) and is closed. It is a **design upgrade**, not a bug that an intern must automatically re-fix.
+
+## Undisclosed defects
+
+The marketplace modules (accounts, rewards, reviews, travel, support, seller, wishlist sharing, invoices, order tracking) contain additional **functional bugs and security vulnerabilities that are intentionally not listed here**. Discovering them is part of the assignment. Add each confirmed finding to this table with a new `FK-` ID (use `FK-SEC-` for security findings) and open a GitHub issue using the [bug report template](BUG_REPORT_TEMPLATE.md). Do not copy exploit payloads into public issues; describe the impact and the reproduction steps at the level a reviewer needs.
 
 ## Workflow status lifecycle
 
