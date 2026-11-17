@@ -1,51 +1,65 @@
-# FaultKart — E-commerce Debugging Playground
+# FaultKart — Full MERN Marketplace & Debugging Challenge
 
-**FaultKart is an intentionally imperfect MERN (MongoDB, Express, React, Node.js) e-commerce demo for a one-week multi-agent debugging assignment.**
+FaultKart is an **original Flipkart/Amazon-style e-commerce demo**, built with MongoDB, Express, React, Node.js and Vite. It is an intentionally imperfect training application used for an intern's multi-agent debugging and security validation assessment.
 
-This is a **local development / educational application**, not a production storefront. There is no real authentication or payment processing. It deliberately contains functional defects for an intern to discover, reproduce, prioritize, test, fix, and document. Do not deploy this demo publicly as a real store.
+> **Educational demo only.** There is no production authentication, payment gateway, shipping service, or real delivery. Use fictional addresses and phone numbers only.
 
-## What the demo does
-- Browse a seeded catalog, filter/search/sort products.
-- Add/update/remove items in a demo shopping cart.
-- Apply a demo discount coupon, inspect totals, and place simulated orders.
-- View order history and stock changes.
+## Marketplace features
 
-## Quick start
-Requirements: Node.js 20+, npm, Docker (for local MongoDB), or a local MongoDB server.
+- Flipkart/Amazon-style storefront: app tabs (Minutes, Travel, Grocery), delivery-pincode picker, SuperCoin badge, search with live suggestions, account and "More" menus, department icon strip, offer carousel and personalised shelves.
+- 59 demo products across 13 departments (Mobiles, Electronics, Fashion, Accessories, Home, Furniture, Appliances, Beauty, Sports, Toys, Grocery, Books, Stationery).
+- Listing page with category, price, brand, rating, discount and availability filters, sort tabs and pagination.
+- Product page with image views, offers, pincode delivery estimate, specifications, ratings breakdown and customer reviews.
+- Cart with quantity selector, save for later, coupons (`SAVE10`, `FLAT100`) and price details; wishlist.
+- Checkout with demo login, saved or new delivery address, order summary and simulated payments (UPI, card, net banking, gift card balance, COD).
+- Orders: history with filters/search, order detail with tracking timeline, cancellation, invoice print, buy again.
+- Account: demo OTP login/sign-up (OTP `123456`), profile, saved addresses, coupons, SuperCoins (earn/redeem), Plus zone, gift cards (`WELCOME250`, `FKGIFT500`, `FKGIFT1000`), wallet, notifications.
+- Services: Become a Seller registration, Help Centre with FAQs and tickets, Travel (fictional flight search and booking), Minutes (quick grocery), Offer Zone, policy pages.
+- Catalog photos are fetched by the API and served from `/api/images/:photoId` (disk-cached), so the browser does not need direct CDN access.
+- Automatic **missing catalog** population on local API startup; explicit API connection error and image fallbacks.
+
+## Getting started
+
+Requirements: Node.js 20+, npm, Docker Desktop with Compose (or a local MongoDB service).
 
 ```bash
 git clone https://github.com/AditHash/faultkart-ecom-application-MERN.git
 cd faultkart-ecom-application-MERN
 docker compose up -d
 npm install
-npm run seed
 npm run dev
 ```
 
-Open http://localhost:5173. The API runs at http://localhost:4000.
+Open **http://localhost:5173**. API: **http://localhost:4000/api/health**. In development the API seeds missing sample items automatically. If your database is already populated, run `npm run seed` to refresh the demo catalog metadata.
 
-If not using Docker, copy `server/.env.example` to `server/.env` and point `MONGODB_URI` at your MongoDB instance. Demo seed is idempotent and resets the demo catalog (not orders or cart).
+If not using Docker, copy `server/.env.example` to `server/.env` and set `MONGODB_URI` to your local MongoDB. This isn't a hosted storefront.
 
-## Assignment
-See [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md) for the one-week challenge, architecture, quality bar and deliverables. Use [docs/BUG_LOG.md](docs/BUG_LOG.md) to track reproducible findings and [docs/BUG_REPORT_TEMPLATE.md](docs/BUG_REPORT_TEMPLATE.md) for detailed reports.
+### Branch preview
 
-**No answer key is committed to the public repository.** The intern should discover bugs via test-driven investigation, not hints embedded in source comments.
+The redesigned marketplace is initially delivered in the `feature/marketplace-experience` branch for review. To try it before merge:
 
-## Scripts
-- `npm run dev` — start API and Vite web client
-- `npm run seed` — load/reset demo products
-- `npm test` — run baseline API unit tests
-- `npm run dev:server` / `npm run dev:client` — run either service
+```bash
+git fetch origin
+git switch feature/marketplace-experience
+docker compose up -d
+npm install
+npm run dev
+```
 
-## Validation and reviewer sign-off
+For repeatable testing: `npm test` runs unit tests, `npm run build` builds the React frontend. CI also runs API smoke tests against disposable MongoDB.
 
-The project deliberately starts with defects. A green happy-path build alone does **not** mean the challenge is complete.
+## Student / human / AI documentation
 
-- [Human/intern instructions](docs/HUMAN_GUIDE.md) and [AI agent rules](docs/AI_AGENT_GUIDE.md)
-- [Pull request template](.github/pull_request_template.md): each PR must include bug IDs, evidence and test links
-- [Validation and grading guide](docs/VALIDATION_AND_GRADING.md): required CI checks, security scan meanings, reviewer checklist and mandatory manual branch protection
-- [Bug register](docs/BUG_LOG.md) and [report template](docs/BUG_REPORT_TEMPLATE.md)
+- [Intern/human guide](docs/HUMAN_GUIDE.md)
+- [AI agent guidelines](AGENTS.md) and [multi-agent operational guide](docs/AI_AGENT_GUIDE.md)
+- [Assignment instructions](docs/ASSIGNMENT.md)
+- [Bug register](docs/BUG_LOG.md) and [bug report template](docs/BUG_REPORT_TEMPLATE.md)
+- [Instructor's QA and security review procedure](docs/VALIDATION_AND_GRADING.md)
 
-Automated GitHub Actions run functional smoke tests, dependency and secret scans, static analysis and a localhost-only OWASP ZAP runtime scan. The **instructor separately runs private acceptance tests against the exact PR commit** and reviews vulnerabilities before approving the pull request. The private evaluator is intentionally not stored in this public repository.
+Do not silently fix every seeded bug as part of the storefront design. The intern must discover, reproduce and repair the intentionally imperfect behavior. Maintain the instructor's hidden acceptance suite privately.
 
-**Repository owner action required:** protect the `main` branch under **Settings → Branches** and require pull requests, instructor approval and all validated checks listed in the grading guide. Files in the repository cannot enable GitHub branch protection by themselves.
+## Security and pull-request validation
+
+The GitHub workflows check frontend build, backend tests, MongoDB-backed smoke paths, secret scanning, dependency and filesystem vulnerabilities, CodeQL, Semgrep and OWASP ZAP. A successful build is **not** proof that all bugs are fixed. The instructor must approve each final pull request after private acceptance tests and security review.
+
+For development and testing use an isolated MongoDB instance and non-sensitive sample information. Don't deploy this app publicly as a commercial storefront.

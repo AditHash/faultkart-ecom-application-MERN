@@ -5,3 +5,8 @@ node_modules/
 dist/
 coverage/
 .DS_Store
+
+# Instructor-only material (seeded bug inventory)
+instructor/
+test-results/
+playwright-report/

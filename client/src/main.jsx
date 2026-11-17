@@ -1,111 +1,175 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { CheckCircle2, X, AlertCircle } from 'lucide-react';
+import { api, getRoute, navigate, StoreContext } from './lib.js';
+import { Header, Footer } from './Header.jsx';
+import Home from './pages/Home.jsx';
+import Shop from './pages/Shop.jsx';
+import Product from './pages/Product.jsx';
+import Cart from './pages/Cart.jsx';
+import Checkout from './pages/Checkout.jsx';
+import { Success, OrderList, OrderDetail } from './pages/Orders.jsx';
+import Account from './pages/Account.jsx';
+import { Login, Seller, Help, Travel, Minutes, Offers, Wishlist, SharedWishlist, InfoPage } from './pages/Services.jsx';
 import './style.css';
 
-const storedSession = localStorage.getItem('faultkart-session') || Math.random().toString(36).slice(2, 12);
-localStorage.setItem('faultkart-session', storedSession);
-async function api(path, options = {}) {
-  const response = await fetch('/api' + path, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', 'x-demo-session': 'demo-' + storedSession, ...(options.headers || {}) }
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Request failed');
-  return data;
-}
-const money = amount => '₹' + Number(amount).toFixed(2);
+const initialCart = { items: [], subtotal: 0, discount: 0, total: 0 };
 
 function App() {
+  const [route, setRoute] = useState(getRoute());
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState({ items: [], subtotal: 0, discount: 0, total: 0 });
+  const [cart, setCart] = useState(initialCart);
+  const [wishlist, setWishlist] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [sort, setSort] = useState('name');
-  const [coupon, setCoupon] = useState('');
-  const [status, setStatus] = useState('');
+  const [me, setMe] = useState(null);
+  const [saved, setSaved] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [backendError, setBackendError] = useState('');
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [couponDraft, setCouponDraft] = useState('');
+  const [coupon, setCoupon] = useState('');
 
-  async function refreshCart() {
-    setCart(await api('/cart?coupon=' + encodeURIComponent(coupon)));
+  useEffect(() => {
+    const updateRoute = () => setRoute(getRoute());
+    window.addEventListener('hashchange', updateRoute);
+    return () => window.removeEventListener('hashchange', updateRoute);
+  }, []);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timer = setTimeout(() => setNotice(''), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
+  async function reloadCart(nextCoupon = coupon) {
+    setCart(await api('/cart?coupon=' + encodeURIComponent(nextCoupon)));
   }
-  async function refreshProducts() {
-    const params = new URLSearchParams({ q: search, category, sort });
-    setProducts(await api('/products?' + params.toString()));
+  async function refreshMe() {
+    const [profile, savedItems] = await Promise.all([api('/me'), api('/saved')]);
+    setMe(profile); setSaved(savedItems);
   }
-  async function refreshOrders() {
-    setOrders(await api('/orders'));
+  async function reloadAll(nextCoupon = coupon) {
+    const [all, nextCart, nextWishlist, nextOrders] = await Promise.all([
+      api('/products'), api('/cart?coupon=' + encodeURIComponent(nextCoupon)), api('/wishlist'), api('/orders')
+    ]);
+    setProducts(all);
+    setCart(nextCart);
+    setWishlist(nextWishlist);
+    setOrders(nextOrders);
+    setBackendError('');
+    refreshMe().catch(() => {});
   }
   useEffect(() => {
-    refreshProducts().catch(e => setStatus(e.message));
-  }, [search, category, sort]);
-  useEffect(() => {
-    refreshCart().catch(e => setStatus(e.message));
-  }, [coupon]);
-  useEffect(() => { refreshOrders().catch(e => setStatus(e.message)); }, []);
+    let active = true;
+    Promise.all([api('/products'), api('/cart'), api('/wishlist'), api('/orders')])
+      .then(([all, basket, favourites, history]) => {
+        if (!active) return;
+        setProducts(all); setCart(basket); setWishlist(favourites); setOrders(history);
+        setBackendError('');
+      })
+      .catch(error => { if (active) setBackendError(error.message); });
+    refreshMe().catch(() => {});
+    api('/me/recent').then(items => { if (active) setRecent(items); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
-  async function run(action) {
+  async function act(operation, success = 'Updated successfully') {
+    if (busy) return false;
     setBusy(true);
     try {
-      await action();
-      await Promise.all([refreshCart(), refreshProducts(), refreshOrders()]);
-      setStatus('Action completed.');
-    } catch (error) { setStatus(error.message); }
-    finally { setBusy(false); }
+      await operation();
+      try {
+        await reloadAll();
+        setNotice(success);
+      } catch {
+        setNotice(success + '. Some details could not refresh; reload the page to see the latest information.');
+      }
+      return true;
+    } catch (error) {
+      setNotice(error.message);
+      return false;
+    } finally { setBusy(false); }
   }
-  const json = value => JSON.stringify(value);
-  const cartQuantity = id => cart.items.find(i => i.productId === id)?.quantity || 0;
-  return <main>
-    <header><div><h1>FaultKart</h1><p>An intentionally imperfect e-commerce playground</p></div><span className="tag">LOCAL DEMO • NO REAL PAYMENTS</span></header>
-    <section className="notice">Intern challenge: investigate unexpected behavior, reproduce it, write tests, and propose scoped fixes. See the repository guides.</section>
-    {status && <div className="status" role="status">{status}</div>}
-    <div className="layout">
-      <section>
-        <div className="section-title"><h2>Explore products</h2><span>{products.length} items</span></div>
-        <div className="filters">
-          <input aria-label="Search products" placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} />
-          <select aria-label="Filter category" value={category} onChange={e => setCategory(e.target.value)}>
-            <option value="">All categories</option><option>Electronics</option><option>Accessories</option><option>Home</option>
-          </select>
-          <select aria-label="Sort products" value={sort} onChange={e => setSort(e.target.value)}>
-            <option value="name">Name</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option>
-          </select>
-        </div>
-        <div className="products">
-          {products.map(p => <article className="product" key={p._id}>
-            <div className="art" aria-hidden="true">{p.category === 'Electronics' ? '⌘' : p.category === 'Home' ? '⌂' : '◇'}</div>
-            <div className="small">{p.category} · {p.sku}</div>
-            <h3>{p.name}</h3>
-            <p>Stock: {p.stock}</p>
-            <div className="product-bottom"><strong>{money(p.price)}</strong><button disabled={busy} onClick={() => run(() => api('/cart/items', { method: 'POST', body: json({ productId: p._id, quantity: cartQuantity(p._id) + 1 }) }))}>Add to cart</button></div>
-          </article>)}
-          {products.length === 0 && <p>No products found. Run the seed command if the catalog is empty.</p>}
-        </div>
-      </section>
-      <aside>
-        <div className="panel"><div className="section-title"><h2>Your cart</h2><span>{cart.items.length} lines</span></div>
-          {cart.items.length === 0 && <p className="muted">Your cart is empty.</p>}
-          {cart.items.map(item => <div className="cart-line" key={item.productId}>
-            <div><strong>{item.name}</strong><div className="small">{money(item.price)} each</div></div>
-            <div className="controls">
-              <button aria-label={'Decrease ' + item.name} disabled={busy} onClick={() => run(() => api('/cart/items/' + item.productId, { method: 'PATCH', body: json({ quantity: item.quantity - 1 }) }))}>−</button>
-              <span>{item.quantity}</span>
-              <button aria-label={'Increase ' + item.name} disabled={busy} onClick={() => run(() => api('/cart/items/' + item.productId, { method: 'PATCH', body: json({ quantity: item.quantity + 1 }) }))}>+</button>
-              <button aria-label={'Remove ' + item.name} disabled={busy} onClick={() => run(() => api('/cart/items/' + item.productId, { method: 'DELETE' }))}>×</button>
-            </div>
-          </div>)}
-          <label className="small" htmlFor="coupon">Demo coupon</label>
-          <input id="coupon" placeholder="e.g. SAVE10" value={coupon} onChange={e => setCoupon(e.target.value)} />
-          <div className="totals"><div><span>Subtotal</span><strong>{money(cart.subtotal)}</strong></div><div><span>Discount</span><strong>−{money(cart.discount)}</strong></div><div className="grand"><span>Total</span><strong>{money(cart.total)}</strong></div></div>
-          <button className="primary" disabled={busy || !cart.items.length} onClick={() => run(() => api('/orders', { method: 'POST', body: json({ coupon }) }))}>Place demo order</button>
-        </div>
-        <div className="panel"><div className="section-title"><h2>Order history</h2><span>{orders.length}</span></div>
-          {orders.length === 0 && <p className="muted">No demo orders yet.</p>}
-          {orders.map(o => <div className="order" key={o._id}><span>{new Date(o.createdAt).toLocaleDateString()}</span><strong>{money(o.total)}</strong><div className="small">{o.lines.map(l => l.name + ' × ' + l.quantity).join(', ')}</div></div>)}
-        </div>
-      </aside>
+  async function addToCart(product, buyNow = false) {
+    const existing = cart.items.find(item => item.productId === product._id);
+    const done = await act(() => api('/cart/items', { method: 'POST', body: JSON.stringify({
+      productId: product._id, quantity: (existing?.quantity || 0) + 1
+    }) }), 'Added to cart');
+    if (done && buyNow) navigate('checkout');
+  }
+  async function setQuantity(item, quantity) {
+    await act(() => api('/cart/items/' + item.productId, { method: 'PATCH', body: JSON.stringify({ quantity }) }), 'Cart updated');
+  }
+  async function removeCart(item) {
+    await act(() => api('/cart/items/' + item.productId, { method: 'DELETE' }), 'Removed from cart');
+  }
+  async function saveForLater(item) {
+    await act(() => api('/cart/items/' + item.productId + '/save-for-later', { method: 'POST' }), 'Saved for later');
+  }
+  async function moveToCart(product) {
+    await act(() => api('/saved/' + product._id + '/move-to-cart', { method: 'POST' }), 'Moved to cart');
+  }
+  async function removeSaved(product) {
+    await act(() => api('/saved/' + product._id, { method: 'DELETE' }), 'Removed from saved items');
+  }
+  async function toggleWish(product) {
+    const isSaved = wishlist.some(item => item._id === product._id);
+    await act(() => api('/wishlist/' + product._id, { method: isSaved ? 'DELETE' : 'POST' }),
+      isSaved ? 'Removed from wishlist' : 'Saved to wishlist');
+  }
+  async function applyCoupon(event) {
+    event.preventDefault();
+    const nextCoupon = couponDraft.trim().toUpperCase();
+    if (nextCoupon && !['SAVE10', 'FLAT100'].includes(nextCoupon)) {
+      setNotice('Coupon not recognised. Try SAVE10 or FLAT100.');
+      return;
+    }
+    try {
+      await reloadCart(nextCoupon);
+      setCoupon(nextCoupon);
+      setNotice(nextCoupon ? 'Coupon applied to demo total' : 'Coupon removed');
+    }
+    catch (error) { setNotice(error.message); }
+  }
+  function rememberView(product) {
+    api('/me/recent/' + product._id, { method: 'POST' })
+      .then(() => setRecent(current => [product, ...current.filter(p => p._id !== product._id)].slice(0, 12))).catch(() => {});
+  }
+  async function login(form) {
+    const profile = await api('/auth/login', { method: 'POST', body: JSON.stringify(form) });
+    setMe(profile);
+    setNotice('Welcome, ' + profile.name + '!');
+  }
+  async function logout() {
+    await act(() => api('/auth/logout', { method: 'POST' }), 'You have been logged out');
+    navigate('');
+  }
+
+  const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const wishSet = useMemo(() => new Set(wishlist.map(x => x._id)), [wishlist]);
+  const store = {
+    route, products, cart, wishlist, orders, me, saved, recent, busy, setBusy, count, wishSet, coupon, couponDraft, setCouponDraft,
+    act, addToCart, setQuantity, removeCart, saveForLater, moveToCart, removeSaved, toggleWish, applyCoupon, rememberView,
+    login, logout, reloadAll, refreshMe, setBackendError, notify: setNotice,
+    clearCoupon: () => { setCoupon(''); setCouponDraft(''); }
+  };
+
+  const pages = {
+    home: Home, shop: Shop, product: Product, cart: Cart, checkout: Checkout, success: Success, wishlist: Wishlist,
+    orders: route.id ? OrderDetail : OrderList, account: Account, login: Login, seller: Seller, help: Help,
+    travel: Travel, minutes: Minutes, offers: Offers, page: InfoPage, shared: SharedWishlist
+  };
+  const Page = pages[route.page] || Home;
+
+  return <StoreContext.Provider value={store}>
+    <div className="app-shell">
+      <Header/>
+      {notice && <div className="toast" role="status"><CheckCircle2 size={17}/>{notice}<button aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={14}/></button></div>}
+      {backendError && <div className="connection-error" role="alert"><AlertCircle size={21}/><div><strong>Storefront couldn't connect to the API.</strong>
+        <p>{backendError}. Start MongoDB and run <code>npm run dev</code>. The local API auto-seeds the catalog on startup.</p></div><button onClick={() => location.reload()}>Retry</button></div>}
+      <main className={'page-' + route.page}><Page key={route.page === 'shop' ? 'shop' : route.key}/></main>
+      <Footer/>
     </div>
-    <footer>FaultKart is a debugging training environment. Never use real personal or payment information.</footer>
-  </main>;
+  </StoreContext.Provider>;
 }
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(<App/>);
