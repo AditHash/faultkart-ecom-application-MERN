@@ -383,7 +383,15 @@ export const demoProducts = rows.map(([sku, name, category, price, mrp, stock, p
 export async function ensureCatalog() {
   if (!demoProducts.length) return 0;
   const result = await Product.bulkWrite(demoProducts.map(item => ({
-    updateOne: { filter: { sku: item.sku }, update: { $setOnInsert: item }, upsert: true }
+    updateOne: {
+      filter: { sku: item.sku },
+      update: {
+        $setOnInsert: { sku: item.sku, name: item.name, category: item.category, price: item.price, stock: item.stock },
+        $set: { brand: item.brand, mrp: item.mrp, image: item.image, description: item.description,
+          rating: item.rating, reviewCount: item.reviewCount, badge: item.badge, features: item.features }
+      },
+      upsert: true
+    }
   })), { ordered: false });
   return result.upsertedCount || 0;
 }
