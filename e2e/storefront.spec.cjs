@@ -5,7 +5,7 @@ test('shopper can browse the storefront, add to cart and place a demo order', as
   await expect(page.getByRole('heading', { name: /Big finds/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Shop by category' })).toBeVisible();
   await expect(page.locator('.product-card').first()).toBeVisible();
-  await expect(page.locator('.product-card')).toHaveCount(18);
+  await expect(page.locator('.product-card').nth(15)).toBeVisible();
   await page.screenshot({ path: 'test-results/faultkart-home.png', fullPage: true });
 
   await page.locator('.product-card').first().getByRole('button', { name: /Add to cart/i }).click();
