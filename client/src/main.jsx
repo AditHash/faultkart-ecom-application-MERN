@@ -424,7 +424,7 @@ function App() {
       {route.page === 'orders' && <div className="inner-page">
         <div className="breadcrumbs"><button onClick={() => navigate('')}>Home</button><ChevronRight size={14}/><span>My orders</span></div>
         <SectionHeading title="My orders" subtitle="Your simulated purchases, all in one place"/>
-        {orders.length ? <div className="order-list">{[...orders].reverse().map(order => <div className="order-card" key={order._id}>
+        {orders.length ? <div className="order-list">{orders.map(order => <div className="order-card" key={order._id}>
           <div className="order-card-head"><span><Package size={17}/> Order #{order._id.slice(-8).toUpperCase()}</span><span className="order-status"><CheckCircle2 size={15}/> {order.status || 'Placed'}</span></div>
           <div className="order-card-body">{order.lines.map((item, idx) => <div className="order-line" key={idx}><ProductImage product={item} className="order-thumb"/><div><strong>{item.name}</strong><small>Quantity: {item.quantity}</small></div></div>)}</div>
           <div className="order-card-foot"><span>Placed {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span><strong>{money(order.total)}</strong></div>
