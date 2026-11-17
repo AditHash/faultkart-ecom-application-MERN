@@ -365,6 +365,19 @@ const rows = [
     4.5,
     903,
     "Popular"
+  ],
+  [
+    "FK-129",
+    "Sticker Sheet 12-Pack",
+    "Accessories",
+    49,
+    149,
+    40,
+    "photo-1494438639946-1ebd1d20bf85",
+    "CraftHaus",
+    4.4,
+    287,
+    "Everyday deal"
   ]
 ];
 // Departments added for the full marketplace experience (mobiles, toys, grocery, books, furniture).

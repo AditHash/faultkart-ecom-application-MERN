@@ -36,7 +36,7 @@ app.get('/api/products', safe(async (req, res) => {
   const { q = '', category = '', sort = 'name', minPrice, maxPrice } = req.query;
   const criteria = category ? { category: String(category) } : {};
   let products = await Product.find(criteria).lean();
-  if (q) products = products.filter(p => (p.name + ' ' + p.brand + ' ' + p.category).toLowerCase().includes(String(q).toLowerCase()));
+  if (q) products = products.filter(p => (p.name + ' ' + p.category).toLowerCase().includes(String(q).toLowerCase()));
   if (minPrice && Number.isFinite(Number(minPrice))) products = products.filter(p => p.price >= Number(minPrice));
   if (maxPrice && Number.isFinite(Number(maxPrice))) products = products.filter(p => p.price <= Number(maxPrice));
   const { brand = '', minRating, minDiscount } = req.query;
@@ -50,7 +50,7 @@ app.get('/api/products', safe(async (req, res) => {
   else if (sort === 'discount') products.sort((a, b) => (b.mrp - b.price) / b.mrp - (a.mrp - a.price) / a.mrp);
   else if (sort === 'price-asc') products.sort((a, b) => b.price - a.price);
   else if (sort === 'price-desc') products.sort((a, b) => a.price - b.price);
-  else if (sort === 'rating') products.sort((a, b) => b.rating - a.rating);
+  else if (sort === 'rating') products.sort((a, b) => a.rating - b.rating);
   else products.sort((a, b) => a.name.localeCompare(b.name));
   res.json(products);
 }));
