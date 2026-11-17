@@ -12,9 +12,11 @@
     "test": "npm test -w server",
     "build": "npm run build -w client",
     "dev:server": "npm run dev -w server",
-    "dev:client": "npm run dev -w client"
+    "dev:client": "npm run dev -w client",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "@playwright/test": "^1.56.1"
   }
 }
