@@ -36,11 +36,24 @@ test('category browsing, search, product detail and wishlist work', async ({ pag
   await expect(page.locator('.detail-prices strong')).toBeVisible();
   await page.getByRole('button', { name: 'Add to wishlist' }).click();
   await expect(page.getByRole('status')).toContainText('Saved to wishlist');
-  await page.getByRole('button', { name: 'Wishlist', exact: true }).click();
+  await page.locator('header').getByRole('button', { name: 'Wishlist', exact: true }).click();
   await expect(page.locator('.product-card').first()).toBeVisible();
   await page.getByRole('textbox', { name: 'Search the marketplace' }).fill('mouse');
   await page.getByRole('button', { name: 'Search products' }).click();
   await expect(page.getByRole('heading', { name: /Results for "mouse"/i })).toBeVisible();
   await expect(page.locator('.shop-grid .product-card').first()).toBeVisible();
   await page.screenshot({ path: 'test-results/faultkart-search.png', fullPage: true });
+});
+
+test('mobile shoppers can open and use category filters', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#/shop');
+  const toggle = page.getByRole('button', { name: 'Filters', exact: true });
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  const filters = page.locator('#shop-filters');
+  await expect(filters).toBeVisible();
+  await filters.getByRole('button', { name: 'Fashion', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Fashion', exact: true })).toBeVisible();
+  await expect(page.locator('.shop-grid .product-card').first()).toBeVisible();
 });

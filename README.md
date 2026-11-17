@@ -6,13 +6,17 @@ FaultKart is an **original Flipkart/Amazon-style e-commerce demo**, built with M
 
 ## Marketplace features
 
-- Responsive blue-and-yellow shopping storefront with promotions, category navigation, and product photography.
-- 28 demo products across Electronics, Fashion, Accessories, Home, Appliances, Beauty, and Sports.
-- Category browse, keyword search, sorting, product details, star ratings, offers and product highlights.
-- MongoDB-backed shopping cart, quantity control, coupon previews (`SAVE10` and `FLAT100`), and wishlist.
-- Delivery-address form, mock payment selection, order confirmation, and order history.
-- Automatic **missing catalog** population on local API startup; no empty screen when MongoDB starts fresh.
-- Explicit API connection error and image fallbacks.
+- Flipkart/Amazon-style storefront: app tabs (Minutes, Travel, Grocery), delivery-pincode picker, SuperCoin badge, search with live suggestions, account and "More" menus, department icon strip, offer carousel and personalised shelves.
+- 59 demo products across 13 departments (Mobiles, Electronics, Fashion, Accessories, Home, Furniture, Appliances, Beauty, Sports, Toys, Grocery, Books, Stationery).
+- Listing page with category, price, brand, rating, discount and availability filters, sort tabs and pagination.
+- Product page with image views, offers, pincode delivery estimate, specifications, ratings breakdown and customer reviews.
+- Cart with quantity selector, save for later, coupons (`SAVE10`, `FLAT100`) and price details; wishlist.
+- Checkout with demo login, saved or new delivery address, order summary and simulated payments (UPI, card, net banking, gift card balance, COD).
+- Orders: history with filters/search, order detail with tracking timeline, cancellation, invoice print, buy again.
+- Account: demo OTP login/sign-up (OTP `123456`), profile, saved addresses, coupons, SuperCoins (earn/redeem), Plus zone, gift cards (`WELCOME250`, `FKGIFT500`, `FKGIFT1000`), wallet, notifications.
+- Services: Become a Seller registration, Help Centre with FAQs and tickets, Travel (fictional flight search and booking), Minutes (quick grocery), Offer Zone, policy pages.
+- Catalog photos are fetched by the API and served from `/api/images/:photoId` (disk-cached), so the browser does not need direct CDN access.
+- Automatic **missing catalog** population on local API startup; explicit API connection error and image fallbacks.
 
 ## Getting started
 

@@ -367,7 +367,42 @@ const rows = [
     "Popular"
   ]
 ];
-export const demoProducts = rows.map(([sku, name, category, price, mrp, stock, photo, brand, rating, reviewCount, badge]) => ({
+// Departments added for the full marketplace experience (mobiles, toys, grocery, books, furniture).
+const moreRows = [
+  ['FK-201', 'Pixelon 8 Pro 5G (12GB/256GB)', 'Mobiles', 32999, 44999, 15, 'photo-1598327105666-5b89351aff97', 'Pixelon', 4.5, 5120, 'Bestseller'],
+  ['FK-202', 'Galaxion A55 5G (8GB/128GB)', 'Mobiles', 14999, 21999, 22, 'photo-1580910051074-3eb694886505', 'Galaxion', 4.3, 8930, 'Best under ₹15K'],
+  ['FK-203', 'Orbit 15 (128GB, Midnight)', 'Mobiles', 59999, 69900, 9, 'photo-1592899677977-9c10ca588bbd', 'Orbit', 4.7, 12044, 'Top rated'],
+  ['FK-204', 'VoltEdge G37 Power (6000 mAh)', 'Mobiles', 11499, 15999, 30, 'photo-1585060544812-6b45742d762f', 'VoltEdge', 4.2, 3301, '6000 mAh'],
+  ['FK-205', 'Galaxion Edge Night Camera Phone', 'Mobiles', 44999, 64999, 5, 'photo-1601784551446-20c9e07cdbdb', 'Galaxion', 4.1, 845, 'New launch'],
+  ['FK-206', 'Pulse Buds Pro Wireless Earbuds', 'Electronics', 1999, 4999, 50, 'photo-1590658268037-6bf12165a8df', 'Pulse', 4.3, 15420, 'Hot deal'],
+  ['FK-207', 'Fitpulse Smartwatch Series 3', 'Electronics', 2499, 7999, 26, 'photo-1546868871-7041f2a55e12', 'Pulse', 4.2, 6872, 'Trending'],
+  ['FK-208', 'NextGen Gaming Console Bundle', 'Electronics', 44990, 54990, 7, 'photo-1606144042614-b2417e99c4e3', 'PlayCore', 4.8, 4210, 'Gamers pick'],
+  ['FK-209', 'Ergo Wireless Mouse Pro', 'Electronics', 1199, 2499, 35, 'photo-1527864550417-7fd91fc51a46', 'KeyNova', 4.4, 2318, null],
+  ['FK-210', 'Studio Over-Ear Headphones (Rose)', 'Electronics', 3499, 8999, 18, 'photo-1545127398-14699f92334b', 'SoundArc', 4.5, 7340, 'Bestseller'],
+  ['FK-211', 'Brick Builder Train Set', 'Toys', 1299, 2499, 25, 'photo-1596461404969-9ae70f2830c1', 'PlayNest', 4.6, 2210, 'Bestseller'],
+  ['FK-212', 'Plush Teddy Bear (60 cm)', 'Toys', 699, 1499, 40, 'photo-1566576912321-d58ddd7a6088', 'CuddleCo', 4.5, 4102, 'Trending'],
+  ['FK-213', 'Creative Building Blocks (500 pcs)', 'Toys', 899, 1799, 18, 'photo-1558060370-d644479cb6f7', 'PlayNest', 4.4, 976, null],
+  ['FK-214', 'Air Cushion Running Shoes', 'Fashion', 2299, 5999, 28, 'photo-1600185365483-26d7a4cc7519', 'Stride', 4.3, 3120, '62% off'],
+  ['FK-215', 'Classic Polarised Sunglasses', 'Accessories', 599, 1999, 60, 'photo-1572635196237-14b3f281503f', 'Urban Trail', 4.2, 5021, null],
+  ['FK-221', 'Fresh Watermelon (approx. 2 kg)', 'Grocery', 89, 129, 50, 'photo-1587049352846-4a222e784d38', 'FreshFarm', 4.3, 1520, 'Fresh'],
+  ['FK-222', 'Premium Basmati Rice (5 kg)', 'Grocery', 579, 899, 60, 'photo-1586201375761-83865001e31c', 'GrainGold', 4.4, 6230, 'Value pack'],
+  ['FK-223', 'Arabica Coffee Beans (500 g)', 'Grocery', 649, 999, 35, 'photo-1559056199-641a0ac8b55e', 'BrewHouse', 4.6, 2045, null],
+  ['FK-224', 'Whole Wheat Bread Loaf (400 g)', 'Grocery', 55, 65, 80, 'photo-1509440159596-0249088772ff', 'BakeDaily', 4.1, 812, 'In minutes'],
+  ['FK-225', 'Natural Toned Milk (1 L)', 'Grocery', 68, 72, 90, 'photo-1563636619-e9143da7973b', 'DairyDay', 4.5, 9310, 'In minutes'],
+  ['FK-226', 'Chocolate Party Mix (1 kg)', 'Grocery', 799, 1099, 40, 'photo-1621939514649-280e2ee25f60', 'SnackBox', 4.6, 3488, 'Party pack'],
+  ['FK-227', 'Fresh Fruit & Veggie Basket', 'Grocery', 349, 499, 25, 'photo-1610832958506-aa56368176cf', 'FreshFarm', 4.2, 1104, null],
+  ['FK-231', 'How Ideas Work (Paperback)', 'Books', 299, 499, 45, 'photo-1589829085413-56de8ae18c73', 'Inkwell Press', 4.5, 3210, 'Bestseller'],
+  ['FK-232', 'Classic Literature Box Set', 'Books', 1499, 2999, 12, 'photo-1512820790803-83ca734da794', 'Inkwell Press', 4.7, 1102, 'Gift pick'],
+  ['FK-233', 'The Startup Playbook (Hardcover)', 'Books', 449, 699, 30, 'photo-1543002588-bfa74002ed7e', 'Northbound', 4.3, 954, null],
+  ['FK-234', 'Reader’s Favourites Combo (4 books)', 'Books', 899, 1599, 15, 'photo-1544947950-fa07a98d237f', 'Northbound', 4.4, 488, null],
+  ['FK-241', '3-Seater Fabric Sofa', 'Furniture', 18999, 34999, 6, 'photo-1555041469-a586c61ea9bc', 'CasaNova', 4.3, 721, 'Bestseller'],
+  ['FK-242', 'Ergonomic Lounge Chair', 'Furniture', 6499, 11999, 10, 'photo-1506439773649-6e0eb8cfb237', 'CasaNova', 4.4, 1290, null],
+  ['FK-243', 'Accent Arm Chair', 'Furniture', 4999, 8999, 14, 'photo-1592078615290-033ee584e267', 'WoodWise', 4.2, 530, null],
+  ['FK-244', 'Modular Living Room Set', 'Furniture', 29999, 54999, 4, 'photo-1524758631624-e2822e304c36', 'WoodWise', 4.1, 210, 'Deal of the day'],
+  ['FK-245', 'Mid-century Loveseat', 'Furniture', 12999, 21999, 8, 'photo-1567016432779-094069958ea5', 'CasaNova', 4.2, 377, null]
+].map(row => row.map(value => value === null ? undefined : value));
+
+export const demoProducts = [...rows, ...moreRows].map(([sku, name, category, price, mrp, stock, photo, brand, rating, reviewCount, badge]) => ({
   sku, name, category, price, mrp, stock, brand, rating, reviewCount, badge,
   image: 'https://images.unsplash.com/' + photo + '?auto=format&fit=crop&w=850&q=82',
   description: name + ' by ' + brand + '. An everyday favourite, made for effortless quality and value.',
