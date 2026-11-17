@@ -102,6 +102,7 @@ function App() {
       setQuery(params.get('q') || '');
       setSearchDraft(params.get('q') || '');
       setCategory(params.get('category') || '');
+      setSort(params.get('sort') || 'name');
     }
   }, [route.key]);
 
@@ -239,7 +240,7 @@ function App() {
   function priceBreakdown(showButton = false) {
     return <div className="price-box">
       <div className="price-box-title">PRICE DETAILS</div>
-      <div className="price-line"><span>Price ({count} item{count === 1 ? '' : 's'})</span><span>{money(cart.subtotal)}</span></div>
+      <div className="price-line"><span>Price ({count} item{count === 1 ? '' : 's'})</span><span>{money(cart.subtotal + cartSavings)}</span></div>
       <div className="price-line green"><span>Product savings</span><span>−{money(cartSavings)}</span></div>
       <div className="price-line green"><span>Coupon discount</span><span>−{money(cart.discount)}</span></div>
       <div className="price-line"><span>Delivery charges</span><span className="green">FREE</span></div>
