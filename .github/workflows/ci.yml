@@ -95,3 +95,42 @@ jobs:
       - name: API logs on failure
         if: failure()
         run: cat /tmp/faultkart-api.log || true
+
+  docker-stack-smoke:
+    name: Docker full-stack smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate full Compose configuration
+        run: docker compose -f docker-compose.full.yml config --quiet
+      - name: Build and start all Docker services
+        run: docker compose -f docker-compose.full.yml up --build -d
+      - name: Check Docker API, frontend and seeded catalog
+        shell: bash
+        run: |
+          for i in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:4000/api/health > /dev/null && curl --silent --fail http://127.0.0.1:5173/ > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent http://127.0.0.1:4000/api/health
+          curl --fail --silent http://127.0.0.1:5173/ > /dev/null
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const response = await fetch('http://127.0.0.1:5173/api/products');
+          assert.equal(response.status, 200);
+          const products = await response.json();
+          assert.ok(products.length >= 29, 'Expected demo catalog from full Docker stack');
+          console.log('Docker stack passed: API, Vite frontend, internal API proxy, 29 demo products');
+          JS
+      - name: Docker service logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.full.yml logs --no-color
+      - name: Tear down disposable Docker stack
+        if: always()
+        run: docker compose -f docker-compose.full.yml down -v --remove-orphans
