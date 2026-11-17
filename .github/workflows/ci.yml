@@ -64,6 +64,8 @@ jobs:
           assert.ok(orders.some(o => o._id === checkout.orderId));
           console.log('API smoke test passed: health, catalog, cart, checkout, order history');
           JS
+      - name: Marketplace product and checkout validation
+        run: node scripts/smoke-marketplace.mjs
       - name: API logs on failure
         if: failure()
         run: cat /tmp/faultkart-api.log || true
