@@ -36,3 +36,16 @@ See [docs/ASSIGNMENT.md](docs/ASSIGNMENT.md) for the one-week challenge, archite
 - `npm run seed` — load/reset demo products
 - `npm test` — run baseline API unit tests
 - `npm run dev:server` / `npm run dev:client` — run either service
+
+## Validation and reviewer sign-off
+
+The project deliberately starts with defects. A green happy-path build alone does **not** mean the challenge is complete.
+
+- [Human/intern instructions](docs/HUMAN_GUIDE.md) and [AI agent rules](docs/AI_AGENT_GUIDE.md)
+- [Pull request template](.github/pull_request_template.md): each PR must include bug IDs, evidence and test links
+- [Validation and grading guide](docs/VALIDATION_AND_GRADING.md): required CI checks, security scan meanings, reviewer checklist and mandatory manual branch protection
+- [Bug register](docs/BUG_LOG.md) and [report template](docs/BUG_REPORT_TEMPLATE.md)
+
+Automated GitHub Actions run functional smoke tests, dependency and secret scans, static analysis and a localhost-only OWASP ZAP runtime scan. The **instructor separately runs private acceptance tests against the exact PR commit** and reviews vulnerabilities before approving the pull request. The private evaluator is intentionally not stored in this public repository.
+
+**Repository owner action required:** protect the `main` branch under **Settings → Branches** and require pull requests, instructor approval and all validated checks listed in the grading guide. Files in the repository cannot enable GitHub branch protection by themselves.
