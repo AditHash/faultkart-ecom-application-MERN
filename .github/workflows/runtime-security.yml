@@ -47,5 +47,6 @@ jobs:
         with:
           target: http://127.0.0.1:5173/
           fail_action: true
+          rules_file_name: .zap/rules.tsv
           allow_issue_writing: false
           artifact_name: zap-runtime-security
