@@ -211,6 +211,7 @@ Review failing tests, add new regression tests for each bug and preserve the **b
 5. **Open a Pull Request (PR)** on GitHub, with your branch as **head** and `main` as **base**. Use [.github/pull_request_template.md](.github/pull_request_template.md). Reference the bug ID and issue (for example, `Fixes #1`), include reproduction evidence, the failing-before/passing-after regression test, changed files, risks, screenshots/logs and real CI run links. Do not invent test results.
 6. **Wait for all required GitHub Actions checks** on the PR's *current* head SHA. The automation includes:
    - `test-build-and-smoke` (unit tests, React build, seeded MongoDB, API smoke checks, Playwright browser journeys).
+   - `Docker full-stack smoke test` (builds MongoDB, Express and React containers, then checks the API, frontend and proxied seeded catalog).
    - `PR evidence check` (branch, bug references and documentation format).
    - `Secret scan (Gitleaks)`.
    - `Dependency audit (npm)` and `Filesystem scan (Trivy)`.
@@ -220,7 +221,7 @@ Review failing tests, add new regression tests for each bug and preserve the **b
 8. **Request human review.** The instructor checks diffs, tests and security findings, then runs **private acceptance tests on the exact PR commit**. You do not get the hidden answer key. A green public CI run is necessary but insufficient.
 9. **Merge only after approval.** The reviewer—not the intern—approves and merges into protected `main`. After merging, verify the issue was closed and the updated behavior still passes the checks.
 
-**Branch protection:** `main` is protected. You must work through branches and PRs, obey any required approving/CODEOWNERS reviews, and never force-push or bypass merge safeguards. If you lack permission to push branches directly, fork the repository and create a PR from your fork according to the instructor's instructions.
+**Branch protection:** `main` is protected. The repository owner should also make `PR evidence check` and `Docker full-stack smoke test` required once they have appeared in GitHub Actions; a workflow running successfully is not the same as GitHub enforcing it for merges. You must work through branches and PRs, obey any required approving/CODEOWNERS reviews, and never force-push or bypass merge safeguards. If you lack permission to push branches directly, fork the repository and create a PR from your fork according to the instructor's instructions.
 
 For the authoritative acceptance policy, reviewer checklist and grading criteria, see [docs/VALIDATION_AND_GRADING.md](docs/VALIDATION_AND_GRADING.md) and the [reviewer sign-off template](docs/REVIEWER_SIGNOFF_TEMPLATE.md).
 
