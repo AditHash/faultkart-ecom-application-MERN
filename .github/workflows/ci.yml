@@ -66,6 +66,32 @@ jobs:
           JS
       - name: Marketplace product and checkout validation
         run: node scripts/smoke-marketplace.mjs
+      - name: Install Chromium for real browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Start frontend
+        shell: bash
+        run: |
+          npm run dev:client > /tmp/faultkart-web.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:5173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/faultkart-web.log
+          exit 1
+      - name: Playwright storefront journeys
+        run: npm run test:e2e
+        env:
+          CI: 'true'
+      - name: Upload screenshots and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: faultkart-browser-evidence
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: API logs on failure
         if: failure()
         run: cat /tmp/faultkart-api.log || true
