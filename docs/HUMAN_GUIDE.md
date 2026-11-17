@@ -47,3 +47,11 @@ Do not claim a finding without a reproducible test or a clear manual sequence. D
 Submit a link to your orchestrator code, architecture diagram, MCP inventory, bug register, at least three reproducible findings (or a documented limitation), regression tests, sample agent traces with secrets redacted, and a demo showing a human approval step.
 
 **Reviewer note:** There is no public instructor answer key. Review evidence and working behavior; do not grade based on an assumed fixed number of bugs.
+
+
+## Mandatory submission and independent validation
+All solutions must be pushed to a `fix/*`, `bugfix/*`, `intern/*`, `feature/*`, or `security/*` branch and submitted as a **pull request to main**. Do **not** work directly on main and do not merge your own PR. Use the repository PR template, cite each FK bug ID, include before/after reproduction, regression-test links, and mention unresolved issues.
+
+Required checks run on incoming PRs: functional baseline, secret leakage (Gitleaks), dependency advisories (npm audit), Trivy filesystem scanning, CodeQL, Semgrep, and local OWASP ZAP. Review the findings instead of hiding failures with exclusions or `continue-on-error`. The instructor also performs additional **private acceptance tests** against the submitted commit; the intern does not need access to their source.
+
+A completed CI build is **necessary but not sufficient**: the human reviewer independently validates the bug register and approves the final PR. See [Validation and grading](VALIDATION_AND_GRADING.md) for the review standard.
