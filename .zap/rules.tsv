@@ -1,0 +1,4 @@
+# Instructor-controlled baseline exceptions, only for ephemeral Vite development server.
+# All genuine security-header alerts remain actionable/blocking.
+10049	IGNORE	(Development server cache responses are not production cache policy)
+10109	IGNORE	(Modern SPA detection is informational, not a vulnerability)
