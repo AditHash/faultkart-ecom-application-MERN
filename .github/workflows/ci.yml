@@ -1,0 +1,69 @@
+name: FaultKart validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-build-and-smoke:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+      - name: Seed demo MongoDB
+        run: npm run seed
+      - name: Start API and smoke-test checkout
+        shell: bash
+        run: |
+          node server/src/index.js > /tmp/faultkart-api.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:4000/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const headers = { 'content-type': 'application/json', 'x-demo-session': 'ci-checkout' };
+          async function request(path, options = {}) {
+            const response = await fetch('http://127.0.0.1:4000/api' + path, { ...options, headers });
+            const data = await response.json();
+            assert.ok(response.ok, JSON.stringify({ path, status: response.status, data }));
+            return data;
+          }
+          assert.equal((await request('/health')).ok, true);
+          const products = await request('/products');
+          assert.ok(products.length >= 6, 'seeded catalog should contain at least six products');
+          const product = products[0];
+          await request('/cart/items', { method: 'POST', body: JSON.stringify({ productId: product._id, quantity: 1 }) });
+          const cart = await request('/cart');
+          assert.equal(cart.items.length, 1);
+          assert.equal(cart.subtotal, product.price);
+          const checkout = await request('/orders', { method: 'POST', body: '{}' });
+          assert.ok(checkout.orderId);
+          const after = await request('/cart');
+          assert.equal(after.items.length, 0);
+          const orders = await request('/orders');
+          assert.ok(orders.some(o => o._id === checkout.orderId));
+          console.log('API smoke test passed: health, catalog, cart, checkout, order history');
+          JS
+      - name: API logs on failure
+        if: failure()
+        run: cat /tmp/faultkart-api.log || true
