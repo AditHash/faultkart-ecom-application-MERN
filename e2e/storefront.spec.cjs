@@ -36,7 +36,7 @@ test('category browsing, search, product detail and wishlist work', async ({ pag
   await expect(page.locator('.detail-prices strong')).toBeVisible();
   await page.getByRole('button', { name: 'Add to wishlist' }).click();
   await expect(page.getByRole('status')).toContainText('Saved to wishlist');
-  await page.getByRole('button', { name: 'Wishlist', exact: true }).click();
+  await page.locator('.site-header').getByRole('button', { name: 'Wishlist', exact: true }).click();
   await expect(page.locator('.product-card').first()).toBeVisible();
   await page.getByRole('textbox', { name: 'Search the marketplace' }).fill('mouse');
   await page.getByRole('button', { name: 'Search products' }).click();
