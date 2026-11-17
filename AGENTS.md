@@ -24,3 +24,9 @@ Identify, reproduce, explain and repair defects in small, independently reviewab
 
 ## Agent coordination
 See `docs/AI_AGENT_GUIDE.md` for roles, tool permissions, handoffs, and a structured report format.
+
+
+## Review and security gates
+Treat `.github/workflows`, `CODEOWNERS`, test assertions, and scanner configurations as review-critical controls. Never weaken, skip, remove, or bypass them to produce a green run. When the task involves security remediation, record the original finding and demonstrate that the fix removes it. Never assert that a passing CI build proves there are no defects.
+
+Every code change must be made on a feature branch, linked to a descriptive pull request, and reviewed by the instructor. Run the security workflows and report links for the PR's exact head SHA. Private instructor evaluation is independent and must never be requested, inspected, or modified by an intern agent.
