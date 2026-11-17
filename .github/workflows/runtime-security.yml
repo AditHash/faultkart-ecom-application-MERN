@@ -1,0 +1,49 @@
+name: Runtime security scan
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  zap-baseline:
+    name: Runtime scan (OWASP ZAP)
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install app and seed isolated database
+        run: |
+          npm install --no-audit --no-fund
+          npm run seed
+      - name: Launch localhost-only demo services
+        run: |
+          npm run dev:server > /tmp/faultkart-api.log 2>&1 &
+          npm run dev:client > /tmp/faultkart-web.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4000/api/health >/dev/null && curl -fsS http://127.0.0.1:5173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/faultkart-api.log /tmp/faultkart-web.log
+          exit 1
+      - name: ZAP passive baseline on disposable app
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: http://127.0.0.1:5173/
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-runtime-security
