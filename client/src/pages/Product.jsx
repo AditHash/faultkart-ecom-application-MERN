@@ -63,7 +63,7 @@ function Reviews({ product }) {
     </form>}
     <div className="review-list">{data.reviews.map(review => <article key={review._id} className="review">
       <div><Rating value={review.rating}/><strong>{review.title}</strong>{review.mine && <em className="mine">Your review</em>}</div>
-      <p dangerouslySetInnerHTML={{ __html: review.body.replace(/\n/g, '<br/>') }}/>
+      <p className="review-body">{review.body}</p>
       <small>{review.author} · <BadgeCheck size={13}/> Certified Buyer · {formatDate(review.createdAt, { month: 'short', year: 'numeric' })}</small>
     </article>)}</div>
   </section>;

@@ -36,7 +36,7 @@ app.get('/api/products', safe(async (req, res) => {
   const { q = '', category = '', sort = 'name', minPrice, maxPrice } = req.query;
   const criteria = category ? { category: String(category) } : {};
   let products = await Product.find(criteria).lean();
-  if (q) products = products.filter(p => (p.name + ' ' + p.category).toLowerCase().includes(String(q).toLowerCase()));
+  if (q) products = products.filter(p => (p.name + ' ' + (p.brand || '') + ' ' + p.category).toLowerCase().includes(String(q).toLowerCase()));
   if (minPrice && Number.isFinite(Number(minPrice))) products = products.filter(p => p.price >= Number(minPrice));
   if (maxPrice && Number.isFinite(Number(maxPrice))) products = products.filter(p => p.price <= Number(maxPrice));
   const { brand = '', minRating, minDiscount } = req.query;
@@ -48,9 +48,9 @@ app.get('/api/products', safe(async (req, res) => {
   if (sort === 'popularity') products.sort((a, b) => b.reviewCount - a.reviewCount);
   else if (sort === 'newest') products.sort((a, b) => b.sku.localeCompare(a.sku));
   else if (sort === 'discount') products.sort((a, b) => (b.mrp - b.price) / b.mrp - (a.mrp - a.price) / a.mrp);
-  else if (sort === 'price-asc') products.sort((a, b) => b.price - a.price);
-  else if (sort === 'price-desc') products.sort((a, b) => a.price - b.price);
-  else if (sort === 'rating') products.sort((a, b) => a.rating - b.rating);
+  else if (sort === 'price-asc') products.sort((a, b) => a.price - b.price);
+  else if (sort === 'price-desc') products.sort((a, b) => b.price - a.price);
+  else if (sort === 'rating') products.sort((a, b) => b.rating - a.rating);
   else products.sort((a, b) => a.name.localeCompare(b.name));
   res.json(products);
 }));
@@ -71,6 +71,8 @@ app.post('/api/cart/items', safe(async (req, res) => {
     return res.status(400).json({ error: 'Invalid product or quantity' });
   const product = await Product.findById(productId);
   if (!product) return res.status(404).json({ error: 'Product not found' });
+  if (quantity > product.stock)
+    return res.status(400).json({ error: 'Requested quantity exceeds available stock' });
   const cart = await getCart(session(req));
   const item = cart.items.find(i => String(i.productId) === productId);
   if (item) item.quantity = quantity;
@@ -81,6 +83,9 @@ app.post('/api/cart/items', safe(async (req, res) => {
 app.patch('/api/cart/items/:productId', safe(async (req, res) => {
   const quantity = req.body?.quantity;
   if (!Number.isInteger(quantity) || quantity < 0 || quantity > 20) return res.status(400).json({ error: 'Invalid quantity' });
+  const product = await Product.findById(req.params.productId);
+  if (product && quantity > product.stock)
+    return res.status(400).json({ error: 'Requested quantity exceeds available stock' });
   const cart = await getCart(session(req));
   const item = cart.items.find(i => String(i.productId) === req.params.productId);
   if (!item) return res.status(404).json({ error: 'Item not in cart' });
@@ -108,6 +113,7 @@ app.post('/api/wishlist/:productId', safe(async (req, res) => {
   res.status(201).json({ ok: true });
 }));
 app.delete('/api/wishlist/:productId', safe(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.productId)) return res.status(400).json({ error: 'Invalid product' });
   await Wishlist.updateOne({ sessionId: session(req) }, { $pull: { productIds: req.params.productId } });
   res.json({ ok: true });
 }));
@@ -118,12 +124,13 @@ app.post('/api/orders', safe(async (req, res) => {
   if (!items.length) return res.status(400).json({ error: 'Cart is empty' });
   if (items.some(i => i.quantity > i.stock)) return res.status(409).json({ error: 'Insufficient stock' });
   const delivery = req.body?.delivery;
-  if (delivery) {
-    const fields = ['fullName', 'phone', 'address', 'city', 'state', 'pincode'];
-    if (fields.some(k => typeof delivery[k] !== 'string' || !delivery[k].trim() || delivery[k].length > 200) ||
-      !/^\d{10}$/.test(delivery.phone) || !/^\d{6}$/.test(delivery.pincode)) {
-      return res.status(400).json({ error: 'Please provide a valid name, address, 10-digit phone and 6-digit PIN code' });
-    }
+  if (!delivery || typeof delivery !== 'object') {
+    return res.status(400).json({ error: 'Please provide a valid name, address, 10-digit phone and 6-digit PIN code' });
+  }
+  const fields = ['fullName', 'phone', 'address', 'city', 'state', 'pincode'];
+  if (fields.some(k => typeof delivery[k] !== 'string' || !delivery[k].trim() || delivery[k].length > 200) ||
+    !/^\d{10}$/.test(delivery.phone) || !/^\d{6}$/.test(delivery.pincode)) {
+    return res.status(400).json({ error: 'Please provide a valid name, address, 10-digit phone and 6-digit PIN code' });
   }
   const paymentMethod = ['cod', 'demo-online', 'upi', 'card', 'netbanking', 'wallet'].includes(req.body?.paymentMethod) ? req.body.paymentMethod : 'cod';
   const summary = summarizeCart(items, req.body?.coupon || '');
@@ -143,7 +150,13 @@ app.post('/api/orders', safe(async (req, res) => {
     if (paymentMethod === 'wallet') await User.updateOne({ sessionId: session(req) }, { $inc: { giftCardBalance: summary.total } });
     throw error;
   }
-  for (const item of items) await Product.updateOne({ _id: item.productId }, { $inc: { stock: -item.quantity } });
+  for (const item of items) {
+    const updated = await Product.updateOne({ _id: item.productId, stock: { $gte: item.quantity } }, { $inc: { stock: -item.quantity } });
+    if (!updated.modifiedCount) {
+      await Order.deleteOne({ _id: order._id });
+      return res.status(409).json({ error: 'Item out of stock during checkout' });
+    }
+  }
   cart.items = [];
   await cart.save();
   const user = await getUser(session(req));
@@ -157,7 +170,7 @@ app.post('/api/orders', safe(async (req, res) => {
   res.status(201).json({ orderId: order.id, ...summary });
 }));
 app.get('/api/orders', safe(async (req, res) => {
-  res.json((await Order.find({ sessionId: session(req) }).sort({ createdAt: 1 }).lean()).map(trackOrder));
+  res.json((await Order.find({ sessionId: session(req) }).sort({ createdAt: -1 }).lean()).map(trackOrder));
 }));
 app.get('/api/orders/:id', safe(async (req, res) => {
   if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid order' });
