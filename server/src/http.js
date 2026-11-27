@@ -1,7 +1,9 @@
 // Shared request helpers for every FaultKart router.
 export function session(req) {
-  const value = req.header('x-demo-session') || 'demo';
-  return /^[a-zA-Z0-9_-]{1,64}$/.test(value) ? value : 'demo';
+  const value = req.header('x-demo-session');
+  if (value && /^[a-zA-Z0-9_-]{1,64}$/.test(value)) return value;
+  const clientKey = req.ip || req.socket?.remoteAddress || 'guest';
+  return 'demo-' + Buffer.from(clientKey).toString('hex').slice(0, 16);
 }
 export function safe(handler) { return (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next); }
 

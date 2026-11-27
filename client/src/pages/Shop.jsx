@@ -54,7 +54,7 @@ export default function Shop() {
   const visible = useMemo(() => inStock ? results.filter(p => p.stock > 0) : results, [results, inStock]);
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const start = (page - 1) * PAGE_SIZE;
-  const pageItems = visible.slice(start, page * PAGE_SIZE - 1);
+  const pageItems = visible.slice(start, page * PAGE_SIZE);
   const toggleBrand = brand => setBrands(brands.includes(brand) ? brands.filter(b => b !== brand) : [...brands, brand]);
   const clearAll = () => { setCategory(''); setSort('name'); setBrands([]); setMinPrice(0); setMaxPrice(0); setMinRating(0); setMinDiscount(0); setInStock(false); navigate('shop'); };
   const title = query ? 'Results for "' + query + '"' : category || 'All products';

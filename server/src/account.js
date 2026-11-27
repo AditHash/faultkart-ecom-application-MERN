@@ -85,7 +85,7 @@ accountRouter.post('/auth/logout', safe(async (req, res) => {
 }));
 accountRouter.patch('/me', safe(async (req, res) => {
   const { name, email, gender } = req.body || {};
-  const update = { ...req.body };
+  const update = {};
   if (name !== undefined) { if (!isText(name, 60)) return res.status(400).json({ error: 'Enter your name (max 60 characters)' }); update.name = name.trim(); }
   if (email !== undefined) { if (email && !emailOk(email)) return res.status(400).json({ error: 'Enter a valid email address' }); update.email = email.trim(); }
   if (gender !== undefined) { if (!['', 'male', 'female', 'other'].includes(gender)) return res.status(400).json({ error: 'Invalid gender' }); update.gender = gender; }
@@ -97,6 +97,7 @@ accountRouter.patch('/me', safe(async (req, res) => {
 // ---- Notification preferences ----------------------------------------------------------
 function mergeSettings(target, source) {
   for (const key in source) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
       target[key] = mergeSettings(target[key] || {}, source[key]);
     } else if (typeof source[key] === 'boolean') {
